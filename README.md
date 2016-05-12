@@ -40,6 +40,9 @@ The shows that `A_mul_B!` for a `StandardizedMatrix` can be done with little ove
 ```julia
 function Base.A_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 	A_mul_B!(y, A.data, b ./ A.σ)
-	y[:] -= mean(y)
+	m = mean(y)
+	for i in eachindex(y)
+		@inbounds y[i] = y[i] - m
+	end
 end
 ```
