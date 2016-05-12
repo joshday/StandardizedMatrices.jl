@@ -8,41 +8,21 @@ Statisticians often work with standardized matrices.  If `x` is an `n×p` data m
 
 This package defines a `StandardizedMatrix` type that treats a matrix as standardized without copying or changing data in place.
 
-# Motivating Example
+# A Motivating Example
 
-Suppose we wish to do matrix-vector multiplication with a standardized matrix.
+Suppose we wish to do matrix-vector multiplication with a standardized matrix where the original matrix is sparse.  Typically, standardizing a sparse matrix destroys the sparsity.
 
 ```julia
-using StatsBase
+using StatsBase, StandardizedMatrices
 
-# generate matrix x, standardized matrix z, and vector β
-n, p = 100, 10
-x = randn(n, p)
-z = zscore(x, 1)
+# generate some data
+n, p = 100_000, 1000
+x = sprandn(n, p, .01)
 β = randn(p)
 
-# The standardized matrix-vector multiplication can be put in terms of the original matrix:
-σ = vec(std(x, 1))
-val1 = z * β
-val2 = (eye(n) - ones(n) * ones(n)' / n) * x * Diagonal(1 ./ σ) * β
-isapprox(val1, val2)
+xdense = zscore(x, 1)		# this destroys the sparsity
+z = StandardizedMatrix(x)	# this acts as standardized, but keeps sparse benefits
 
-# The expression with the original matrix can be simplified further:
-u = x * (β ./ σ)
-val3 = (eye(n) - ones(n) * ones(n)' / n) * u
-val4 = u - mean(u)
-isapprox(val1, val4)
-```
-
-
-The shows that `A_mul_B!` for a `StandardizedMatrix` can be done with little overhead:
-
-```julia
-function Base.A_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
-	A_mul_B!(y, A.data, b ./ A.σ)
-	m = mean(y)
-	for i in eachindex(y)
-		@inbounds y[i] = y[i] - m
-	end
-end
+@time xdense * β;
+@time z * β;  # Almost 100 times speedup on my machine
 ```
