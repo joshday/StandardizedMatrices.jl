@@ -43,7 +43,7 @@ function Base.A_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 end
 function Base.At_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 	At_mul_B!(y, A.data, b - mean(b))
-	for i in eachindex(y)
+	for i in eachindex(A.σ)
 		@inbounds y[i] = y[i] / A.σ[i]
 	end
 end
