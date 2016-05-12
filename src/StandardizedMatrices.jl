@@ -44,10 +44,9 @@ end
 function Base.At_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 	At_mul_B!(y, A.data, b - mean(b))
 	for i in eachindex(y)
-		y[i] = y[i] / A.σ[i]
+		@inbounds y[i] = y[i] / A.σ[i]
 	end
 end
-
 function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
 	y = zeros(T, size(A, 1))
 	A_mul_B!(y, A, b)
@@ -55,22 +54,4 @@ function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
 end
 
 
-end
-
-
-
-module Test
-using StandardizedMatrices
-macro display(expr)
-	return :(display($expr))
-end
-
-x = randn(100, 10)
-y = Vector{Float32}(randn(10))
-z = StandardizedMatrix(x)
-@display z * y
-
-x = sprandn(100, 10, .1)
-z = StandardizedMatrix(x)
-@display z
 end
