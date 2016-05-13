@@ -24,5 +24,5 @@ xdense = zscore(x, 1)		# this destroys the sparsity
 z = StandardizedMatrix(x)	# this acts as standardized, but keeps sparse benefits
 
 @time xdense * β;
-@time z * β;  # Almost 100 times speedup on my machine
+@time z * β;  # Almost 20 times speedup on my machine
 ```

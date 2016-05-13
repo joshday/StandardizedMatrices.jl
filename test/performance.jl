@@ -7,11 +7,15 @@ x = randn(n, p)
 x2 = zscore(x, 1)
 z = StandardizedMatrix(x)
 β = randn(p)
-isapprox(x2 * β, z * β) && info("Dense Matrix-Vector multiplication correct")
+isapprox(x2 * β, z * β) ?
+	info("Dense Matrix-Vector multiplication correct") :
+	info("Dense Matrix-Vector multiplication incorrect")
 x = sprandn(n, p, .01)
 x2 = zscore(x, 1)
 z = StandardizedMatrix(x)
-isapprox(x2 * β, z * β) && info("Sparse Matrix-Vector multiplication correct")
+isapprox(x2 * β, z * β) ?
+	info("Sparse Matrix-Vector multiplication correct") :
+	info("Sparse Matrix-Vector multiplication incorrect")
 
 
 info("Dense A_mul_B! timing ratio")
