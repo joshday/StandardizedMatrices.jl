@@ -31,18 +31,13 @@ Base.length(o::StandardizedMatrix) 				= length(o.data)
 
 
 # Matrix-Vector multiplication
-function Base.A_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
+function Base.A_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
 	A_mul_B!(y, A.data, b .* A.σinv)
-	m = mean(y)
-	for i in eachindex(y)
-		@inbounds y[i] = y[i] - m
-	end
+	y[:] -= mean(y)
 end
 function Base.At_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 	At_mul_B!(y, A.data, b - mean(b))
-	for i in eachindex(A.σinv)
-		@inbounds y[i] = y[i] * A.σinv[i]
-	end
+	y[:] *= A.σinv
 end
 function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
 	y = zeros(T, size(A, 1))
