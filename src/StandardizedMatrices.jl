@@ -3,22 +3,19 @@ export StandardizedMatrix
 
 #-----------------------------------------------------------------------------# types
 typealias AVec{T} AbstractVector{T}
-typealias AMat{T} AbstractMatrix{T}
-
 
 #----------------------------------------------------------------# StandardizedMatrix
 """
 `StandardizedMatrix(x, μ = mean(x, 1), σ = std(x, 1))`
-
 """
-immutable StandardizedMatrix{T <: AMat}
-	data::T
+immutable StandardizedMatrix{T, S <: AbstractMatrix} <: AbstractMatrix{T}
+	data::S
 	μ::Vector{Float64}
-	σ::Vector{Float64}
+	σinv::Vector{Float64}
 end
-function StandardizedMatrix(x::AMat, μ = mean(x, 1), σ = std(x, 1))
+function StandardizedMatrix(x::AbstractMatrix, μ = mean(x, 1), σ = std(x, 1))
 	@assert size(x, 2) == length(μ) == length(σ) "Incompatible dimensions"
-	StandardizedMatrix(x, vec(μ), vec(σ))
+	StandardizedMatrix{eltype(x), typeof(x)}(x, vec(μ), 1 ./ vec(σ))
 end
 
 
@@ -35,7 +32,7 @@ Base.length(o::StandardizedMatrix) 				= length(o.data)
 
 # Matrix-Vector multiplication
 function Base.A_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
-	A_mul_B!(y, A.data, b ./ A.σ)
+	A_mul_B!(y, A.data, b .* A.σinv)
 	m = mean(y)
 	for i in eachindex(y)
 		@inbounds y[i] = y[i] - m
@@ -43,8 +40,8 @@ function Base.A_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 end
 function Base.At_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
 	At_mul_B!(y, A.data, b - mean(b))
-	for i in eachindex(A.σ)
-		@inbounds y[i] = y[i] / A.σ[i]
+	for i in eachindex(A.σinv)
+		@inbounds y[i] = y[i] * A.σinv[i]
 	end
 end
 function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
