@@ -3,36 +3,67 @@ export StandardizedMatrix
 
 #-----------------------------------------------------------------------------# types
 typealias AVec{T} AbstractVector{T}
+typealias AMat{T} AbstractMatrix{T}
+typealias VecF Vector{Float64}
 
 #----------------------------------------------------------------# StandardizedMatrix
 """
-`StandardizedMatrix(x, μ = mean(x, 1), σ = std(x, 1))`
+Treat a matrix as standardized, similar to `z = StatsBase.zscore(x, 1)`, without
+altering the original data.
+
+`z = StandardizedMatrix(x)`
 """
-immutable StandardizedMatrix{T, S <: AbstractMatrix} <: AbstractMatrix{T}
+immutable StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
 	data::S
-	μ::Vector{Float64}
-	σinv::Vector{Float64}
+	μ::VecF			# column means
+	σinv::VecF		# inverse of column stdevs
+	function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
+		n, p = size(x)
+		μp, σp = length(μ), length(σ)
+		@assert p == μp "size(x, 2) == $p doesn't match length(μ) == $μp"
+		@assert p == σp "size(x, 2) == $p doesn't match length(σ) == $σp"
+		new(x, μ, 1 ./ σ)
+	end
 end
-function StandardizedMatrix(x::AbstractMatrix, μ = mean(x, 1), σ = std(x, 1))
-	@assert size(x, 2) == length(μ) == length(σ) "Incompatible dimensions"
-	StandardizedMatrix{eltype(x), typeof(x)}(x, vec(μ), 1 ./ vec(σ))
+# This acts as inner constructor.  All constructors call this.  See:
+# http://docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
+function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
+	T = eltype((x[1] - μ[1]) / σ[1])
+	StandardizedMatrix{T, typeof(x)}(x, μ, σ)
+end
+StandardizedMatrix(x::AMat) = StandardizedMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
+
+# Recalculate μ and σ (for when data is altered)
+function recalc!(o::StandardizedMatrix)
+	o.μ[:] = vec(mean(o.data, 1))
+	o.σinv[:] = 1.0 ./ vec(std(o.data, 1))
+	o
 end
 
 
 #----------------------------------------------------------------------# Base methods
-function Base.show(io::IO, o::StandardizedMatrix)
-	println(io, replace("$(typeof(o)) with data:", "StandardizedMatrices.", ""))
-	show(io, o.data)
+# http://docs.julialang.org/en/release-0.4/manual/interfaces/#man-interfaces-abstractarray
+Base.size(o::StandardizedMatrix) 				= size(o.data)
+Base.linearindexing(o::StandardizedMatrix)		= Base.linearindexing(o.data)
+function Base.getindex(o::StandardizedMatrix, i::Int, j::Int)
+	v = getindex(o.data, i, j)
+	return (v - o.μ[j]) * o.σinv[j]
 end
-Base.size(o::StandardizedMatrix, args...) 		= size(o.data, args...)
-Base.getindex(o::StandardizedMatrix, args...) 	= getindex(o.data, args...)
-Base.setindex!(o::StandardizedMatrix, args...) 	= setindex!(o.data, args...)
-Base.length(o::StandardizedMatrix) 				= length(o.data)
+function Base.getindex(o::StandardizedMatrix, i::Int)
+	v = getindex(o.data, i)
+	j = floor(Int, i / size(o, 1))
+	return (v - o.μ[j]) * o.σinv[j]
+end
+function Base.setindex!(o::StandardizedMatrix, ind...)
+	setindex!(o.data, ind...)
+	recalc!(o)
+end
+
 
 
 # Matrix-Vector multiplication
 function Base.A_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
-	A_mul_B!(y, A.data, b .* A.σinv)
+	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
 	m = mean(y)
 	for i in eachindex(y)
 		@inbounds y[i] -= m

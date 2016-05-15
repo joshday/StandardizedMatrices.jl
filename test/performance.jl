@@ -2,20 +2,20 @@ module Performance
 
 using StandardizedMatrices, BenchmarkTools, StatsBase
 
-n, p = 100_000, 1000
+n, p = 1000, 1000
 x = randn(n, p)
 x2 = zscore(x, 1)
 z = StandardizedMatrix(x)
 β = randn(p)
 isapprox(x2 * β, z * β) ?
 	info("Dense Matrix-Vector multiplication correct") :
-	info("Dense Matrix-Vector multiplication incorrect")
+	warn("Dense Matrix-Vector multiplication incorrect")
 x = sprandn(n, p, .01)
 x2 = zscore(x, 1)
 z = StandardizedMatrix(x)
 isapprox(x2 * β, z * β) ?
 	info("Sparse Matrix-Vector multiplication correct") :
-	info("Sparse Matrix-Vector multiplication incorrect")
+	warn("Sparse Matrix-Vector multiplication incorrect")
 
 
 info("Dense A_mul_B! timing ratio")
