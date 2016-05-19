@@ -48,21 +48,14 @@ function Base.getindex(o::StandardizedMatrix, i::Int)
 	j = floor(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-
-# Recalculate μ and σ (for when underlying data is altered)
-# function recalc!(o::StandardizedMatrix)
-# 	o.μ[:] = vec(mean(o.data, 1))
-# 	o.σinv[:] = 1.0 ./ vec(std(o.data, 1))
-# 	o
-# end
-# function Base.setindex!(o::StandardizedMatrix, ind...)
-# 	setindex!(o.data, ind...)
-# 	recalc!(o)
-# end
+function Base.(:*){T <: Real}(A::StandardizedMatrix, b::Union{AVec{T}, AMat{T}})
+	y = zeros(typeof(A[1] * b[1]), size(A, 1))
+	A_mul_B!(y, A, b)
+	y
+end
 
 
-
-# Matrix-Vector multiplication
+#------------------------------------------------------# Matrix-Vector multiplication
 function Base.A_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
 	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
 	m = mean(y)
@@ -76,11 +69,15 @@ function Base.At_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T}
 		@inbounds y[i] *= A.σinv[i]
 	end
 end
-function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
-	y = zeros(T, size(A, 1))
-	A_mul_B!(y, A, b)
-	y
-end
 
+
+#------------------------------------------------------# Matrix-Matrix multiplication
+function Base.A_mul_B!(y::AMat, A::StandardizedMatrix, b::AMat)
+	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
+	m = mean(y)
+	for i in eachindex(y)
+		@inbounds y[i] -= m
+	end
+end
 
 end

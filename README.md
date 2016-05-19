@@ -1,6 +1,8 @@
 # StandardizedMatrices
 
 [![Build Status](https://travis-ci.org/joshday/StandardizedMatrices.jl.svg?branch=master)](https://travis-ci.org/joshday/StandardizedMatrices.jl)
+[![codecov](https://codecov.io/gh/joshday/StandardizedMatrices.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/joshday/StandardizedMatrices.jl)
+
 
 
 Statisticians often work with standardized matrices.  If `x` is an `n×p` data matrix with observations in rows, we want to work with `z = StatsBase.zscore(x, 1)`.  In cases where `x` is large, it may be undesirable to copy the data into a standardized matrix or change the underlying data (`StatsBase.zscore!(x, 1)`).
