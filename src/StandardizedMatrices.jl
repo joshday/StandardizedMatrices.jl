@@ -33,12 +33,6 @@ function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
 end
 StandardizedMatrix(x::AMat) = StandardizedMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
 
-# Recalculate μ and σ (for when data is altered)
-function recalc!(o::StandardizedMatrix)
-	o.μ[:] = vec(mean(o.data, 1))
-	o.σinv[:] = 1.0 ./ vec(std(o.data, 1))
-	o
-end
 
 
 #----------------------------------------------------------------------# Base methods
@@ -54,10 +48,17 @@ function Base.getindex(o::StandardizedMatrix, i::Int)
 	j = floor(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.setindex!(o::StandardizedMatrix, ind...)
-	setindex!(o.data, ind...)
-	recalc!(o)
-end
+
+# Recalculate μ and σ (for when underlying data is altered)
+# function recalc!(o::StandardizedMatrix)
+# 	o.μ[:] = vec(mean(o.data, 1))
+# 	o.σinv[:] = 1.0 ./ vec(std(o.data, 1))
+# 	o
+# end
+# function Base.setindex!(o::StandardizedMatrix, ind...)
+# 	setindex!(o.data, ind...)
+# 	recalc!(o)
+# end
 
 
 
