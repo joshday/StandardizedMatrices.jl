@@ -11,7 +11,8 @@ typealias VecF Vector{Float64}
 Treat a matrix as standardized, similar to `z = StatsBase.zscore(x, 1)`, without
 altering the original data.
 
-`z = StandardizedMatrix(x)`
+`z = StandardizedMatrix(x::AbstractMatrix)`
+`z = StandardizedMatrix(x::AbstractMatrix, μ::AbstractVector, σ::AbstractVector)`
 """
 immutable StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
 	data::S
@@ -30,8 +31,6 @@ function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
 	StandardizedMatrix{T, typeof(x)}(x, μ, one(eltype(σ)) ./ σ)
 end
 StandardizedMatrix(x::AMat) = StandardizedMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
-
-
 
 #----------------------------------------------------------------------# Base methods
 # http://docs.julialang.org/en/release-0.4/manual/interfaces/#man-interfaces-abstractarray
@@ -57,7 +56,6 @@ function Base.(:*){T <: Real}(A::StandardizedMatrix, B::AMat{T})
 	y
 end
 
-
 #------------------------------------------------------# Matrix-Vector multiplication
 function Base.A_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
 	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
@@ -67,7 +65,6 @@ function Base.At_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
 	At_mul_B!(y, A.data, b - mean(b))
 	_scale!(y, A.σinv)
 end
-
 
 #------------------------------------------------------# Matrix-Matrix multiplication
 function Base.A_mul_B!(y::AMat, A::StandardizedMatrix, b::AMat)
@@ -111,8 +108,5 @@ function _scale!(a::Matrix, b::Vector)
 	end
 	a
 end
-
-
-
 
 end #module
