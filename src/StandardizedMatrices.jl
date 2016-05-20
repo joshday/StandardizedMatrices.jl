@@ -18,7 +18,7 @@ immutable StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
 	μ::VecF			# column means
 	σinv::VecF		# inverse of column stdevs
 end
-# This acts as inner constructor.  All constructors call this.  See:
+# This acts as inner constructor.  All constructors should call this.  See:
 # http://docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
 function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
 	T = eltype((x[1] - μ[1]) / σ[1])
@@ -46,9 +46,14 @@ function Base.getindex(o::StandardizedMatrix, i::Int)
 	j = ceil(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
-	y = zeros(typeof(A[1] * b[1]), size(A, 1))
-	A_mul_B!(y, A, b)
+function Base.(:*){T <: Real}(A::StandardizedMatrix, B::AVec{T})
+	y = zeros(typeof(A[1] * B[1]), size(A, 1))
+	A_mul_B!(y, A, B)
+	y
+end
+function Base.(:*){T <: Real}(A::StandardizedMatrix, B::AMat{T})
+	y = zeros(typeof(A[1] * B[1]), size(A, 1), size(B, 2))
+	A_mul_B!(y, A, B)
 	y
 end
 
@@ -56,26 +61,58 @@ end
 #------------------------------------------------------# Matrix-Vector multiplication
 function Base.A_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
 	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
-	m = mean(y)
-	for i in eachindex(y)
-		@inbounds y[i] -= m
-	end
+	center!(y)
 end
-function Base.At_mul_B!{T <: Real}(y::AVec{T}, A::StandardizedMatrix, b::AVec{T})
+function Base.At_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
 	At_mul_B!(y, A.data, b - mean(b))
-	for i in eachindex(y)
-		@inbounds y[i] *= A.σinv[i]
-	end
+	_scale!(y, A.σinv)
 end
 
 
 #------------------------------------------------------# Matrix-Matrix multiplication
 function Base.A_mul_B!(y::AMat, A::StandardizedMatrix, b::AMat)
 	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
-	m = mean(y)
-	for i in eachindex(y)
-		@inbounds y[i] -= m
-	end
+	center!(y)
+end
+function Base.At_mul_B!(y::AMat, A::StandardizedMatrix, b::AMat)
+	At_mul_B!(y, A.data, b .- mean(b, 1))
+	_scale!(y, A.σinv)
 end
 
+#---------------------------------------------------------------------------# helpers
+function center!(v::Vector)
+	μ = mean(v)
+	for i in eachindex(v)
+		@inbounds v[i] -= μ
+	end
+	v
 end
+function center!(m::Matrix)
+	μ = mean(m, 1)
+	@inbounds for j in 1:size(m, 2)
+		μj = μ[j]
+		for i in 1:size(m, 1)
+			m[i, j] -= μj
+		end
+	end
+	m
+end
+function _scale!(a::Vector, b::Vector)
+	for i in eachindex(a)
+		@inbounds a[i] *= b[i]
+	end
+	a
+end
+function _scale!(a::Matrix, b::Vector)
+	for j in 1:size(a, 2)
+		for i in 1:size(a, 1)
+			a[i, j] *= b[i]
+		end
+	end
+	a
+end
+
+
+
+
+end #module
