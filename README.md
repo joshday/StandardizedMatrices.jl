@@ -35,4 +35,3 @@ ratio(median(b1), median(b2))  # StandardizedMatrix is roughly 13 times faster
 - [x] `At_mul_B!()`
 - [ ] `A_mul_Bt!()`
 - [ ] `At_mul_Bt!()`
-- 
