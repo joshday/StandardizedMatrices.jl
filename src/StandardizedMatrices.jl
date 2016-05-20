@@ -17,19 +17,17 @@ immutable StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
 	data::S
 	μ::VecF			# column means
 	σinv::VecF		# inverse of column stdevs
-	function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
-		n, p = size(x)
-		μp, σp = length(μ), length(σ)
-		@assert p == μp "size(x, 2) == $p doesn't match length(μ) == $μp"
-		@assert p == σp "size(x, 2) == $p doesn't match length(σ) == $σp"
-		new(x, μ, 1 ./ σ)
-	end
 end
 # This acts as inner constructor.  All constructors call this.  See:
 # http://docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
 function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
 	T = eltype((x[1] - μ[1]) / σ[1])
-	StandardizedMatrix{T, typeof(x)}(x, μ, σ)
+	n, p = size(x)
+	μp = length(μ)
+	σp = length(σ)
+	@assert p == μp "size(x, 2) == $p doesn't match length(μ) == $μp"
+	@assert p == σp "size(x, 2) == $p doesn't match length(σ) == $σp"
+	StandardizedMatrix{T, typeof(x)}(x, μ, one(eltype(σ)) ./ σ)
 end
 StandardizedMatrix(x::AMat) = StandardizedMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
 
@@ -45,10 +43,10 @@ function Base.getindex(o::StandardizedMatrix, i::Int, j::Int)
 end
 function Base.getindex(o::StandardizedMatrix, i::Int)
 	v = getindex(o.data, i)
-	j = floor(Int, i / size(o, 1))
+	j = ceil(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.(:*){T <: Real}(A::StandardizedMatrix, b::Union{AVec{T}, AMat{T}})
+function Base.(:*){T <: Real}(A::StandardizedMatrix, b::AVec{T})
 	y = zeros(typeof(A[1] * b[1]), size(A, 1))
 	A_mul_B!(y, A, b)
 	y
