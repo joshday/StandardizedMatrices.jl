@@ -45,12 +45,12 @@ function Base.getindex(o::StandardizedMatrix, i::Int)
 	j = ceil(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.(:*){T <: Real}(A::StandardizedMatrix, B::AVec{T})
+function Base.:*{T <: Real}(A::StandardizedMatrix, B::AVec{T})
 	y = zeros(typeof(A[1] * B[1]), size(A, 1))
 	A_mul_B!(y, A, B)
 	y
 end
-function Base.(:*){T <: Real}(A::StandardizedMatrix, B::AMat{T})
+function Base.:*{T <: Real}(A::StandardizedMatrix, B::AMat{T})
 	y = zeros(typeof(A[1] * B[1]), size(A, 1), size(B, 2))
 	A_mul_B!(y, A, B)
 	y

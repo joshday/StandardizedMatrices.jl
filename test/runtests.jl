@@ -1,11 +1,6 @@
 module Tests
-using StandardizedMatrices, StatsBase
-if VERSION >= v"0.5.0-dev+7720"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using StandardizedMatrices, StatsBase, Base.Test
+
 
 n, p, k = 100, 5, 7
 x = randn(n, p)
