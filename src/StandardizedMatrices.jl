@@ -2,9 +2,9 @@ module StandardizedMatrices
 export StandardizedMatrix
 
 #-----------------------------------------------------------------------------# types
-typealias AVec{T} AbstractVector{T}
-typealias AMat{T} AbstractMatrix{T}
-typealias VecF Vector{Float64}
+const AVec{T} 	= AbstractVector{T}
+const AMat{T} 	= AbstractMatrix{T}
+const VecF 		= Vector{Float64}
 
 #----------------------------------------------------------------# StandardizedMatrix
 """
@@ -35,7 +35,7 @@ StandardizedMatrix(x::AMat) = StandardizedMatrix(x, vec(mean(x, 1)), vec(std(x, 
 #----------------------------------------------------------------------# Base methods
 # http://docs.julialang.org/en/release-0.4/manual/interfaces/#man-interfaces-abstractarray
 Base.size(o::StandardizedMatrix) 				= size(o.data)
-Base.linearindexing(o::StandardizedMatrix)		= Base.linearindexing(o.data)
+Base.IndexStyle(o::StandardizedMatrix)		= IndexStyle(o.data)
 function Base.getindex(o::StandardizedMatrix, i::Int, j::Int)
 	v = getindex(o.data, i, j)
 	return (v - o.μ[j]) * o.σinv[j]
