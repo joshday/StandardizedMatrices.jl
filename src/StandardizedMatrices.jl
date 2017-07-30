@@ -33,19 +33,30 @@ dimsmatch(x, μ, σ, dim::Last)  = (length(μ) == length(σ) == size(x, 1))
 
 ZMatrix(x::AMat) = ZMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
 
-#----------------------------------------------------------------------# Base methods
-# http://docs.julialang.org/en/release-0.4/manual/interfaces/#man-interfaces-abstractarray
-Base.size(o::ZMatrix) 				= size(o.data)
-Base.IndexStyle(o::ZMatrix)		= IndexStyle(o.data)
+#-----------------------------------------------------------------------# AbstractArray Interface
+# https://docs.julialang.org/en/latest/manual/interfaces/#man-interface-array-1
+Base.size(o::ZMatrix) = size(o.data)
+Base.IndexStyle(o::ZMatrix)	= IndexCartesian() #IndexStyle(o.data)
+
+variable_ind(::First, i, j) = j
+variable_ind(::Last, i, j) = i
+
 function Base.getindex(o::ZMatrix, i::Int, j::Int)
 	v = getindex(o.data, i, j)
-	return (v - o.μ[j]) * o.σinv[j]
+	k = variable_ind(o.dim, i, j)
+	return (v - o.μ[k]) * o.σinv[k]
 end
-function Base.getindex(o::ZMatrix, i::Int)
-	v = getindex(o.data, i)
-	j = ceil(Int, i / size(o, 1))
-	return (v - o.μ[j]) * o.σinv[j]
+
+function Base.setindex(o::ZMatrix, value, i::Int, j::Int)
+	k = variable_ind(o.dim, i, j)
+	o.data[i, j] = inv(o.σinv[k]) * value + o.μ[k]
 end
+
+
+
+
+
+#-----------------------------------------------------------------------# TODO:
 function Base.:*{T <: Real}(A::ZMatrix, B::AVec{T})
 	y = zeros(typeof(A[1] * B[1]), size(A, 1))
 	A_mul_B!(y, A, B)
