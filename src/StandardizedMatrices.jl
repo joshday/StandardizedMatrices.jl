@@ -1,77 +1,78 @@
 module StandardizedMatrices
-export StandardizedMatrix
 
-#-----------------------------------------------------------------------------# types
+import LearnBase.ObsDim: ObsDimension, First, Last
+export ZMatrix
+
+#-----------------------------------------------------------------------# types
 const AVec{T} 	= AbstractVector{T}
 const AMat{T} 	= AbstractMatrix{T}
 const VecF 		= Vector{Float64}
 
-#----------------------------------------------------------------# StandardizedMatrix
-"""
-Treat a matrix as standardized, similar to `z = StatsBase.zscore(x, 1)`, without
-altering the original data.
-
-`z = StandardizedMatrix(x::AbstractMatrix)`
-`z = StandardizedMatrix(x::AbstractMatrix, μ::AbstractVector, σ::AbstractVector)`
-"""
-immutable StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
+#-----------------------------------------------------------------------# ZMatrix
+immutable ZMatrix{
+		T <: Number,
+		S <: AMat,
+		M <: AVec,
+		V <: AVec,
+		D <: ObsDimension} <: AMat{T}
 	data::S
-	μ::VecF			# column means
-	σinv::VecF		# inverse of column stdevs
+	μ::M		# column means
+	σinv::V		# inverse of column stdevs
+	dim::D
 end
-# This acts as inner constructor.  All constructors should call this.  See:
-# http://docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
-function StandardizedMatrix(x::AMat, μ::AVec, σ::AVec)
+function ZMatrix(x::AMat, μ::AVec, σ::AVec, dim::ObsDimension = First())
 	T = eltype((x[1] - μ[1]) / σ[1])
-	n, p = size(x)
-	μp = length(μ)
-	σp = length(σ)
-	@assert p == μp "size(x, 2) == $p doesn't match length(μ) == $μp"
-	@assert p == σp "size(x, 2) == $p doesn't match length(σ) == $σp"
-	StandardizedMatrix{T, typeof(x)}(x, μ, one(eltype(σ)) ./ σ)
+	if !dimsmatch(x, μ, σ, dim)
+		throw(DimensionMismatch("x: $(size(x)), μ: $(length(μ)), σ: $(length(σ)), dim: $dim"))
+	end
+	σinv = inv.(σ)
+	ZMatrix{T, typeof(x), typeof(μ), typeof(σinv), typeof(dim)}(x, μ, σinv, dim)
 end
-StandardizedMatrix(x::AMat) = StandardizedMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
+dimsmatch(x, μ, σ, dim::First) = (length(μ) == length(σ) == size(x, 2))
+dimsmatch(x, μ, σ, dim::Last)  = (length(μ) == length(σ) == size(x, 1))
+
+ZMatrix(x::AMat) = ZMatrix(x, vec(mean(x, 1)), vec(std(x, 1)))
 
 #----------------------------------------------------------------------# Base methods
 # http://docs.julialang.org/en/release-0.4/manual/interfaces/#man-interfaces-abstractarray
-Base.size(o::StandardizedMatrix) 				= size(o.data)
-Base.IndexStyle(o::StandardizedMatrix)		= IndexStyle(o.data)
-function Base.getindex(o::StandardizedMatrix, i::Int, j::Int)
+Base.size(o::ZMatrix) 				= size(o.data)
+Base.IndexStyle(o::ZMatrix)		= IndexStyle(o.data)
+function Base.getindex(o::ZMatrix, i::Int, j::Int)
 	v = getindex(o.data, i, j)
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.getindex(o::StandardizedMatrix, i::Int)
+function Base.getindex(o::ZMatrix, i::Int)
 	v = getindex(o.data, i)
 	j = ceil(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.:*{T <: Real}(A::StandardizedMatrix, B::AVec{T})
+function Base.:*{T <: Real}(A::ZMatrix, B::AVec{T})
 	y = zeros(typeof(A[1] * B[1]), size(A, 1))
 	A_mul_B!(y, A, B)
 	y
 end
-function Base.:*{T <: Real}(A::StandardizedMatrix, B::AMat{T})
+function Base.:*{T <: Real}(A::ZMatrix, B::AMat{T})
 	y = zeros(typeof(A[1] * B[1]), size(A, 1), size(B, 2))
 	A_mul_B!(y, A, B)
 	y
 end
 
 #------------------------------------------------------# Matrix-Vector multiplication
-function Base.A_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
+function Base.A_mul_B!(y::AVec, A::ZMatrix, b::AVec)
 	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
 	center!(y)
 end
-function Base.At_mul_B!(y::AVec, A::StandardizedMatrix, b::AVec)
+function Base.At_mul_B!(y::AVec, A::ZMatrix, b::AVec)
 	At_mul_B!(y, A.data, b - mean(b))
 	_scale!(y, A.σinv)
 end
 
 #------------------------------------------------------# Matrix-Matrix multiplication
-function Base.A_mul_B!(y::AMat, A::StandardizedMatrix, b::AMat)
+function Base.A_mul_B!(y::AMat, A::ZMatrix, b::AMat)
 	A_mul_B!(y, A.data, Diagonal(A.σinv) * b)
 	center!(y)
 end
-function Base.At_mul_B!(y::AMat, A::StandardizedMatrix, b::AMat)
+function Base.At_mul_B!(y::AMat, A::ZMatrix, b::AMat)
 	At_mul_B!(y, A.data, b .- mean(b, 1))
 	_scale!(y, A.σinv)
 end
