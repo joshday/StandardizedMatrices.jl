@@ -14,7 +14,7 @@ altering the original data.
 `z = StandardizedMatrix(x::AbstractMatrix)`
 `z = StandardizedMatrix(x::AbstractMatrix, μ::AbstractVector, σ::AbstractVector)`
 """
-immutable StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
+struct StandardizedMatrix{T <: AbstractFloat, S <: AMat} <: AMat{T}
 	data::S
 	μ::VecF			# column means
 	σinv::VecF		# inverse of column stdevs
@@ -45,12 +45,12 @@ function Base.getindex(o::StandardizedMatrix, i::Int)
 	j = ceil(Int, i / size(o, 1))
 	return (v - o.μ[j]) * o.σinv[j]
 end
-function Base.:*{T <: Real}(A::StandardizedMatrix, B::AVec{T})
+function Base.:*(A::StandardizedMatrix, B::AVec{T}) where T <: Real
 	y = zeros(typeof(A[1] * B[1]), size(A, 1))
 	A_mul_B!(y, A, B)
 	y
 end
-function Base.:*{T <: Real}(A::StandardizedMatrix, B::AMat{T})
+function Base.:*(A::StandardizedMatrix, B::AMat{T}) where T <: Real
 	y = zeros(typeof(A[1] * B[1]), size(A, 1), size(B, 2))
 	A_mul_B!(y, A, B)
 	y
