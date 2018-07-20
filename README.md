@@ -1,6 +1,7 @@
 # StandardizedMatrices
 
 [![Build Status](https://travis-ci.org/joshday/StandardizedMatrices.jl.svg?branch=master)](https://travis-ci.org/joshday/StandardizedMatrices.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/xmouaoa7xal6n4gq?svg=true)](https://ci.appveyor.com/project/joshday/standardizedmatrices-jl)
 [![codecov](https://codecov.io/gh/joshday/StandardizedMatrices.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/joshday/StandardizedMatrices.jl)
 
 
