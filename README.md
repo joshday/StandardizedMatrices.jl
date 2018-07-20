@@ -32,5 +32,4 @@ ratio(median(b1), median(b2))  # StandardizedMatrix is roughly 13 times faster
 # Methods implemented:
 
 - `*()`
-- `A_mul_B!()`
-- `At_mul_B!()`
+- `mul!(Y, A::StandardizedMatrix, B)`
