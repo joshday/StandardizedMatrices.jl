@@ -1,5 +1,5 @@
 module Tests
-using StandardizedMatrices, StatsBase, Base.Test
+using StandardizedMatrices, StatsBase, Statistics, LinearAlgebra, Test
 
 
 n, p, k = 100, 5, 7
@@ -14,20 +14,20 @@ b4 = randn(n, k)
 @testset "Multiplication with Vector" begin
 	@test isapprox(z * b, x2 * b)
 	storage = zeros(n)
-	A_mul_B!(storage, z, b)
+	mul!(storage, z, b)
 	@test isapprox(storage, x2 * b)
 	storage = zeros(p)
-	At_mul_B!(storage, z, b2)
+	mul!(storage, z', b2)
 	@test isapprox(storage, x2' * b2)
 end
 
 @testset "Multiplication with Matrix" begin
 	@test isapprox(z * b3, x2 * b3)
 	storage = zeros(n, k)
-	A_mul_B!(storage, z, b3)
+	mul!(storage, z, b3)
 	@test isapprox(storage, x2 * b3)
 	storage = zeros(p, k)
-	At_mul_B!(storage, z, b4)
+	mul!(storage, z', b4)
 	@test isapprox(storage, x2' * b4)
 end
 
