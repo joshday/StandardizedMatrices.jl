@@ -1,6 +1,6 @@
 module Performance
 
-using StandardizedMatrices, BenchmarkTools, StatsBase
+using StandardizedMatrices, BenchmarkTools, LinearAlgebra, StatsBase
 
 n, p = 1000, 1000
 x = randn(n, p)
