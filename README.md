@@ -13,7 +13,7 @@ Statisticians often work with standardized matrices.  If `x` is a data matrix wi
 Suppose our original matrix is sparse and we want to perform matrix-vector multiplication with a standardized version.  Typically, standardizing a sparse matrix destroys the sparsity.
 
 ```julia
-using StatsBase, BenchmarkTools, StandardizedMatrices
+using StatsBase, BenchmarkTools, StandardizedMatrices, SparseArrays, Statistics
 
 # generate some data
 n, p = 100_000, 1000
