@@ -33,3 +33,4 @@ ratio(median(b1), median(b2))  # StandardizedMatrix is roughly 13 times faster
 
 - `*()`
 - `mul!(Y, A::StandardizedMatrix, B)`
+- `mul!(Y, A::Adjoint{<:StandardizedMatrix}, B)`
