@@ -1,8 +1,10 @@
+[![CI](https://github.com/joshday/StandardizedMatrices.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/joshday/StandardizedMatrices.jl/actions/workflows/CI.yml)
+[![Docs Build](https://github.com/joshday/StandardizedMatrices.jl/actions/workflows/Docs.yml/badge.svg)](https://github.com/joshday/StandardizedMatrices.jl/actions/workflows/Docs.yml)
+[![Stable Docs](https://img.shields.io/badge/docs-stable-blue)](https://joshday.github.io/StandardizedMatrices.jl/stable/)
+[![Dev Docs](https://img.shields.io/badge/docs-dev-blue)](https://joshday.github.io/StandardizedMatrices.jl/dev/)
+
 # StandardizedMatrices
 
-[![Build Status](https://travis-ci.org/joshday/StandardizedMatrices.jl.svg?branch=master)](https://travis-ci.org/joshday/StandardizedMatrices.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/xmouaoa7xal6n4gq?svg=true)](https://ci.appveyor.com/project/joshday/standardizedmatrices-jl)
-[![codecov](https://codecov.io/gh/joshday/StandardizedMatrices.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/joshday/StandardizedMatrices.jl)
 
 
 

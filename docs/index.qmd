@@ -1,0 +1,23 @@
+---
+title: "StandardizedMatrices.jl"
+engine: julia
+---
+
+Welcome to the documentation for **StandardizedMatrices.jl**.
+
+## Overview
+
+StandardizedMatrices.jl is a Julia package that ...
+
+## Installation
+
+```julia
+using Pkg
+Pkg.add("StandardizedMatrices")
+```
+
+## Quickstart
+
+```{julia}
+println("Hello, World!")
+```
